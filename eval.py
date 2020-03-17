@@ -132,7 +132,7 @@ coco_cats = {} # Call prep_coco_cats to fill this
 coco_cats_inv = {}
 color_cache = defaultdict(lambda: {})
 
-def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, mask_alpha=0.45, fps_str=''):
+def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, mask_alpha=0.45, fps_str='', args=None):
     """
     Note: If undo_transform=False then im_h and im_w are allowed to be None.
     """
@@ -597,7 +597,7 @@ def evalimage(net:Yolact, path:str, save_path:str=None):
     batch = FastBaseTransform()(frame.unsqueeze(0))
     preds = net(batch)
 
-    img_numpy = prep_display(preds, frame, None, None, undo_transform=False)
+    img_numpy = prep_display(preds, frame, None, None, undo_transform=False, args=args)
     
     if save_path is None:
         img_numpy = img_numpy[:, :, (2, 1, 0)]
@@ -709,7 +709,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
     def prep_frame(inp, fps_str):
         with torch.no_grad():
             frame, preds = inp
-            return prep_display(preds, frame, None, None, undo_transform=False, class_color=True, fps_str=fps_str)
+            return prep_display(preds, frame, None, None, undo_transform=False, class_color=True, fps_str=fps_str, args=args)
 
     frame_buffer = Queue()
     video_fps = 0
@@ -933,7 +933,11 @@ def evaluate(net:Yolact, dataset, train_mode=False):
             timer.reset()
 
             with timer.env('Load Data'):
-                img, gt, gt_masks, h, w, num_crowd = dataset.pull_item(image_idx)
+                try:
+                    img, gt, gt_masks, h, w, num_crowd = dataset.pull_item(image_idx)
+                except:
+                    #print('img does not exist')
+                    continue
 
                 # Test flag, do not upvote
                 if cfg.mask_proto_debug:
@@ -949,7 +953,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
                 preds = net(batch)
             # Perform the meat of the operation here depending on our mode.
             if args.display:
-                img_numpy = prep_display(preds, img, h, w)
+                img_numpy = prep_display(preds, img, h, w, args=args)
             elif args.benchmark:
                 prep_benchmark(preds, h, w)
             else:
@@ -1015,6 +1019,25 @@ def calc_map(ap_data):
                 if not ap_obj.is_empty():
                     aps[iou_idx][iou_type].append(ap_obj.get_ap())
 
+    ################
+    ### addition ###
+    ################
+        all_maps = {'box': OrderedDict(), 'mask': OrderedDict()}
+        for iou_type in ('box', 'mask'):
+            all_maps[iou_type]['all'] = 0  # Make this first in the ordereddict
+            try:
+              for i, threshold in enumerate(iou_thresholds):
+                mAP = aps[i][iou_type][_class] * 100 if len(aps[i][iou_type]) > 0 else 0
+                all_maps[iou_type][int(threshold * 100)] = mAP
+              all_maps[iou_type]['all'] = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values()) - 1))
+            except:
+              print("Something failed successfully! Consider getting a coder.")
+        print('#################### Class:', cfg.dataset.class_names[_class], '####################')
+        print_maps(all_maps)
+    ####################
+    ### addition end ###
+    ####################
+
     all_maps = {'box': OrderedDict(), 'mask': OrderedDict()}
 
     # Looking back at it, this code is really hard to read :/
@@ -1024,7 +1047,7 @@ def calc_map(ap_data):
             mAP = sum(aps[i][iou_type]) / len(aps[i][iou_type]) * 100 if len(aps[i][iou_type]) > 0 else 0
             all_maps[iou_type][int(threshold*100)] = mAP
         all_maps[iou_type]['all'] = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values())-1))
-    
+    print('#################### All Classes ####################')  # also added
     print_maps(all_maps)
     
     # Put in a prettier format so we can serialize it to json during training

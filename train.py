@@ -50,11 +50,11 @@ parser.add_argument('--decay', '--weight_decay', default=None, type=float,
                     help='Weight decay for SGD. Leave as None to read this from the config.')
 parser.add_argument('--gamma', default=None, type=float,
                     help='For each lr step, what to multiply the lr by. Leave as None to read this from the config.')
-parser.add_argument('--save_folder', default='weights/',
+parser.add_argument('--save_folder', default='./data/yolact/weights/',
                     help='Directory for saving checkpoint models.')
 parser.add_argument('--log_folder', default='logs/',
                     help='Directory for saving logs.')
-parser.add_argument('--config', default=None,
+parser.add_argument('--config', default='crow_base_config',
                     help='The config object to use.')
 parser.add_argument('--save_interval', default=10000, type=int,
                     help='The number of iterations between saving the model.')
@@ -90,8 +90,7 @@ if args.dataset is not None:
 
 if args.autoscale and args.batch_size != 8:
     factor = args.batch_size / 8
-    if __name__ == '__main__':
-        print('Scaling parameters by %.2f to account for a batch size of %d.' % (factor, args.batch_size))
+    print('Scaling parameters by %.2f to account for a batch size of %d.' % (factor, args.batch_size))
 
     cfg.lr *= factor
     cfg.max_iter //= factor
@@ -113,8 +112,7 @@ if torch.cuda.device_count() == 0:
     exit(-1)
 
 if args.batch_size // torch.cuda.device_count() < 6:
-    if __name__ == '__main__':
-        print('Per-GPU batch size is less than the recommended limit for batch norm. Disabling batch norm.')
+    print('Per-GPU batch size is less than the recommended limit for batch norm. Disabling batch norm.')
     cfg.freeze_bn = True
 
 loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']

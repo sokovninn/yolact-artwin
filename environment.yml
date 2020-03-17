@@ -7,7 +7,6 @@
 name: yolact-env
 #prefix: /your/custom/path/envs/yolact-env
 channels:
-  - conda-forge
   - pytorch
   - defaults
 dependencies:
@@ -20,10 +19,6 @@ dependencies:
   - cudnn
   - pytorch::cuda100
   - matplotlib
-  - git # to download COCO dataset
-  - curl # to download COCO dataset
-  - unzip # to download COCO dataset
-  - conda-forge::bash # to download COCO dataset
   - pip:
     - opencv-python 
     - pillow <7.0 # bug PILLOW_VERSION in torchvision, must be < 7.0 until torchvision is upgraded
