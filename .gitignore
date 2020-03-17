@@ -153,6 +153,7 @@ scripts/aws3/
 data/config_dev.py
 data/coco/
 data/sbd/
+data/yolact/
 
 vid/
 vidres/
