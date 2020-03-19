@@ -958,7 +958,7 @@ yolact_plus_resnet50_config = yolact_plus_base_config.copy({
 })
 
 ### CROW
-crow_base_config = yolact_darknet53_config.copy({ #see yolact_base_config for all the params that can be changed. Add below what you want to alter.
+crow_base_config = yolact_base_config.copy({ #see yolact_base_config for all the params that can be changed. Add below what you want to alter.
   'name': 'crow_base',
   # Dataset stuff
   'dataset': kuka_env_pybullet_dataset, #kuka_env_pybullet_dataset
