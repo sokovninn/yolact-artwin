@@ -798,26 +798,19 @@ coco_base_config = Config({
 
 
 # ----------------------- YOLACT v1.0 CONFIGS ----------------------- #
-#CROW
-PRED_SCALES_550 = [[24], [48], [96], [192], [384]] # for 550 architecture
-LR_STEPS_RATIO = (0.35, 0.75, 0.875, 0.9375) # suggested by Yolact
-max_size = 640 # Yolact is internally built on 550x550, we adjust this to match our camera setting (on HW camera, or simulator) for re-scaling. (We don't want to upscale due to quality loss). #TODO how does this handle non-rectangular resolutions, is there a scew?
-max_iter = 400000
-lr_steps = [int(x*max_iter) for x in LR_STEPS_RATIO]
-
 yolact_base_config = coco_base_config.copy({
     'name': 'yolact_base',
 
     # Dataset stuff
-    'dataset': kuka_env_pybullet_dataset, #kuka_env_pybullet_dataset // coco2017_dataset
-    'num_classes': len(kuka_env_pybullet_dataset.class_names) + 1, #kuka_env_pybullet_dataset // coco2017_dataset # The +1 stands for "background" class
+    'dataset': coco2017_dataset,
+    'num_classes': len(coco2017_dataset.class_names) + 1, #kuka_env_pybullet_dataset // coco2017_dataset # The +1 stands for "background" class
 
     # Image Size
-    'max_size': max_size, 
-    
+    'max_size': 550, 
+
     # Training params
-    'max_iter': max_iter,
-    'lr_steps': lr_steps,
+    'lr_steps': (280000, 600000, 700000, 750000),
+    'max_iter': 800000,
     
     # Backbone Settings
     'backbone': resnet101_backbone.copy({
@@ -827,7 +820,7 @@ yolact_base_config = coco_base_config.copy({
         'use_square_anchors': True, # This is for backward compatability with a bug
 
         'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
-        'pred_scales': [[int(x[0] / 550 * max_size)] for x in PRED_SCALES_550],
+        'pred_scales': [[24], [48], [96], [192], [384]],
     }),
 
     # FPN Settings
@@ -958,11 +951,37 @@ yolact_plus_resnet50_config = yolact_plus_base_config.copy({
 })
 
 ### CROW
+PRED_SCALES_550 = [[24], [48], [96], [192], [384]] # for 550 architecture
+max_size = 640 # Yolact is internally built on 550x550, we adjust this to match our camera setting (on HW camera, or simulator) for re-scaling. (We don't want to upscale due to quality loss
+PRED_SCALES = [[int(x[0] / 550 * max_size)] for x in PRED_SCALES_550]
+LR_STEPS_RATIO = (0.35, 0.75, 0.875, 0.9375) # suggested by Yolact
+max_iter = 400000
+lr_steps = [int(x*max_iter) for x in LR_STEPS_RATIO]
+
 crow_base_config = yolact_base_config.copy({ #see yolact_base_config for all the params that can be changed. Add below what you want to alter.
   'name': 'crow_base',
   # Dataset stuff
   'dataset': kuka_env_pybullet_dataset, #kuka_env_pybullet_dataset
   'num_classes': len(kuka_env_pybullet_dataset.class_names) + 1, #kuka_env_pybullet_dataset #The +1 stands for "background" class
+
+  # Image Size
+  'max_size': max_size, #crow
+  
+  # Training params
+  'max_iter': max_iter,
+  'lr_steps': lr_steps,
+
+  # Backbone Settings
+  'backbone': resnet101_backbone.copy({
+    'selected_layers': list(range(1, 4)),
+    'use_pixel_scales': True,
+    'preapply_sqrt': False,
+    'use_square_anchors': True, # This is for backward compatability with a bug
+
+    'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
+    'pred_scales': PRED_SCALES, #crow
+  }),  
+
 })
 
 # Default config
