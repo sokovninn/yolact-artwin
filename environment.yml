@@ -20,6 +20,7 @@ dependencies:
   - cudnn
   - pytorch::cuda100
   - matplotlib
+  - dill
   - git # to download COCO dataset
   - curl # to download COCO dataset
   - unzip # to download COCO dataset
@@ -29,4 +30,5 @@ dependencies:
     - pillow <7.0 # bug PILLOW_VERSION in torchvision, must be < 7.0 until torchvision is upgraded
     - pycocotools 
     - PyQt5 # needed on KDE/Qt envs for matplotlib
+    - commentjson
 
