@@ -996,7 +996,10 @@ def set_cfg(config_name:str):
 
     # Note this is not just an eval because I'm lazy, but also because it can
     # be used like ssd300_config.copy({'max_size': 400}) for extreme fine-tuning
-    cfg.replace(eval(config_name))
+    if type(config_name) == str: 
+        cfg.replace(eval(config_name))
+    else:
+        cfg.replace(config_name)
 
     if cfg.name is None:
         cfg.name = config_name.split('_config')[0]
@@ -1004,4 +1007,12 @@ def set_cfg(config_name:str):
 def set_dataset(dataset_name:str):
     """ Sets the dataset of the current config. """
     cfg.dataset = eval(dataset_name)
-    
+
+def set_dataset_number(number, names):
+    """ Sets the directory of the dataset of the current config. """
+    new_dataset_dir = cfg.dataset.train_images.split('pybullet')[0] + 'pybullet_' + str(number)
+    cfg.dataset.train_images = new_dataset_dir + '/train/'
+    cfg.dataset.train_info = new_dataset_dir + '/train/annotations.json'
+    cfg.dataset.valid_images = new_dataset_dir + '/test/'
+    cfg.dataset.valid_info = new_dataset_dir + '/test/annotations.json'
+    cfg.dataset.class_names = tuple(names)

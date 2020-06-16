@@ -20,6 +20,8 @@ import torch.utils.data as data
 import numpy as np
 import argparse
 import datetime
+import dill
+import commentjson
 
 # Oof
 import eval as eval_script
@@ -78,6 +80,8 @@ parser.add_argument('--batch_alloc', default=None, type=str,
                     help='If using multiple GPUS, you can set this to be a comma separated list detailing which GPUs should get what local batch size (It should add up to your total batch size).')
 parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
                     help='YOLACT will automatically scale the lr and the number of iterations depending on the batch size. Set this if you want to disable that.')
+parser.add_argument('--dataset_number', default=None,
+                    help='If specified, override the dataset directory specified in the config with the .../dataset_kuka_env_pybullet_dataset_number')
 
 parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
@@ -85,8 +89,17 @@ args = parser.parse_args()
 if args.config is not None:
     set_cfg(args.config)
 
+with open('./data/yolact/weights/config_train.obj', 'wb') as f:
+    dill.dump(cfg, f)
+
 if args.dataset is not None:
     set_dataset(args.dataset)
+
+if args.dataset_number is not None:
+    with open ('./data/yolact/datasets/dataset_kuka_env_pybullet_'+str(args.dataset_number)+'/config_dataset.json', 'r') as f:
+        dataset_cfg = commentjson.load(f)
+        dataset_class_names = dataset_cfg['used_class_names']
+    set_dataset_number(args.dataset_number, dataset_class_names)
 
 if args.autoscale and args.batch_size != 8:
     factor = args.batch_size / 8

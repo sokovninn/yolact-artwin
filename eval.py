@@ -7,6 +7,7 @@ from utils import timer
 from utils.functions import SavePath
 from layers.output_utils import postprocess, undo_image_transformation
 import pycocotools
+import dill
 
 from data import cfg, set_cfg, set_dataset
 
@@ -1073,6 +1074,9 @@ if __name__ == '__main__':
     parse_args()
 
     if args.config is not None:
+        if '.obj' in args.config:
+            with open(args.config,'rb') as f:
+                args.config = dill.load(f)
         set_cfg(args.config)
 
     if args.trained_model == 'interrupt':
