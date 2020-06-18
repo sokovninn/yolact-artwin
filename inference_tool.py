@@ -22,7 +22,7 @@ from data.config import Config
 
 class InfTool:
 
-    def __init__(self):
+    def __init__(self): #TODO make weights, config, ... customizable
         # initialize a yolact net for inference
         # print or override params here, see crow_yolact_wrapper.py for options
         trained_model = '../crow_vision_yolact/data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth'
