@@ -59,19 +59,25 @@ class InfTool:
         self.args = args
 
 
-    def label_image(self, img):
+    def process_batch(self, img):
+        """
+        To speed up processing (avoids duplication if label_image & raw_inference is used)
+        """
         frame = torch.from_numpy(img).cuda().float() #TODO how to make frame/batch with multiple images at once?
         batch = FastBaseTransform()(frame.unsqueeze(0))
         preds = self.net(batch) #TODO provide (fast) alternative that uses existing batch, preds. From crow_vision::detector.py
+        return preds, frame
+
+
+    def label_image(self, img):
+        preds, frame = self.process_batch(img)
         global args
         processed = prep_display(preds, frame, h=None, w=None, undo_transform=False, args=args)
         return processed
 
 
     def raw_inference(self, img):
-        frame = torch.from_numpy(img).cuda().float() #TODO how to make frame/batch with multiple images at once?
-        batch = FastBaseTransform()(frame.unsqueeze(0))
-        preds = self.net(batch)
+        preds, _ = self.process_batch(img)
         global args
         w,h,_ = img.shape
         [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=0, interpolation_mode='bilinear', 
