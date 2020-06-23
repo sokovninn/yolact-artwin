@@ -22,12 +22,13 @@ from data.config import Config
 
 class InfTool:
 
-    def __init__(self): #TODO make weights, config, ... customizable
+    def __init__(self,
+                 weights='../crow_vision_yolact/data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
+                 top_k=25,
+                 score_threshold=0.1
+                 ): 
         # initialize a yolact net for inference
         # print or override params here, see crow_yolact_wrapper.py for options
-        trained_model = '../crow_vision_yolact/data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth'
-        top_k = 25 #number of instances to evaluate, sort descending by score (confidence)
-        score_threshold = 0.001 #score treshold, will ignore everything with lower score (confidence)
 
         ## YOLACT setup
         # setup yolact args #TODO there's a nicer way: yolact.eval.parse_args('.....')
@@ -50,7 +51,7 @@ class InfTool:
 
         #YOLACT net itself
         net = Yolact().cuda()
-        net.load_weights(trained_model)
+        net.load_weights(weights)
         net.eval()
         net.detect.use_fast_nms = True
         net.detect.use_cross_class_nms = False
