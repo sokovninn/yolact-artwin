@@ -10,6 +10,7 @@ import torch
 import cv2
 import numpy as np
 import pkg_resources
+import dill
 
 # import YOLACT
 sys.path.append(os.path.relpath("."))
@@ -18,12 +19,13 @@ from data import set_cfg
 from utils.augmentations import FastBaseTransform
 from layers.output_utils import postprocess
 from eval import prep_display
-from data.config import Config
+from data.config import Config, set_cfg
 
 class InfTool:
 
     def __init__(self,
                  weights='../crow_vision_yolact/data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
+                 config=None,
                  top_k=25,
                  score_threshold=0.1
                  ): 
@@ -31,6 +33,12 @@ class InfTool:
         # print or override params here, see crow_yolact_wrapper.py for options
 
         ## YOLACT setup
+        # setup config
+        if config is not None:
+          if '.obj' in config:
+              with open(config,'rb') as f:
+                  config = dill.load(f)
+          set_cfg(config)
         # setup yolact args #TODO there's a nicer way: yolact.eval.parse_args('.....')
         global args
         args=Config({})
