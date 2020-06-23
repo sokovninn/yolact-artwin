@@ -24,7 +24,7 @@ from data.config import Config, set_cfg
 class InfTool:
 
     def __init__(self,
-                 weights='../crow_vision_yolact/data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
+                 weights='./data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
                  config=None,
                  top_k=25,
                  score_threshold=0.1
