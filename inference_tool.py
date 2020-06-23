@@ -75,7 +75,7 @@ class InfTool:
         """
         frame = torch.from_numpy(img).cuda().float() #TODO how to make frame/batch with multiple images at once?
         batch = FastBaseTransform()(frame.unsqueeze(0))
-        preds = self.net(batch) #TODO provide (fast) alternative that uses existing batch, preds. From crow_vision::detector.py
+        preds = self.net(batch)
         return preds, frame
 
 
@@ -102,8 +102,4 @@ class InfTool:
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=args.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
         return [classes, scores, boxes, masks] #TODO also compute and return centroids?
-
-
-
-
 
