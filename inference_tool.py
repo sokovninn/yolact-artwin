@@ -56,6 +56,7 @@ class InfTool:
         net.detect.use_cross_class_nms = False
 
         self.net = net
+        print("YOLACT network available as self.net")
         self.args = args
 
 
