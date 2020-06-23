@@ -69,15 +69,23 @@ class InfTool:
         return preds, frame
 
 
-    def label_image(self, img):
-        preds, frame = self.process_batch(img)
+    def label_image(self, img, preds=None, frame=None):
+        """
+        optional args preds, frame: obtained from process_batch(). Can be used to speedup cached inferences.
+        """
+        if preds is None or frame is None:
+          preds, frame = self.process_batch(img)
         global args
         processed = prep_display(preds, frame, h=None, w=None, undo_transform=False, args=args)
         return processed
 
 
-    def raw_inference(self, img):
-        preds, _ = self.process_batch(img)
+    def raw_inference(self, img, preds=None):
+        """
+        optional arg preds: if not None, avoids process_batch() call, used to speedup cached inferences.
+        """
+        if preds is None:
+          preds, _ = self.process_batch(img)
         global args
         w,h,_ = img.shape
         [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=0, interpolation_mode='bilinear', 
