@@ -10,7 +10,7 @@ import timeit
 
 IMGS='./data/yolact/datasets/dataset_kuka_env_pybullet_20/test/'
 COUNT=1000
-BATCH=1
+BATCH=4
 
 if __name__ == '__main__':
   cnn = InfTool(weights='./data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth', top_k=15, score_threshold=0.51, config='crow_base_config')
@@ -26,18 +26,13 @@ if __name__ == '__main__':
   del images
   
   #process in batches and time it
-  n=0
   t_start = timeit.default_timer()
   for batch in batches:
-      assert len(batch)==BATCH
-
       #actual inference
       preds, frame = cnn.process_batch(batch, batchsize=BATCH)
       classes, scores, bboxes, masks = cnn.raw_inference(None, preds=preds, frame=frame, batch_idx=0)
-      #print("processing batch {}".format(n))
-      n+=1
   t_stop = timeit.default_timer()
 
-  print("Running {} jobs with batch size {} took {} seconds.".format(COUNT, BATCH, t_stop-t_start))
+  print("Running {} jobs with batch size {} took {} seconds, stacking images took {}.".format(COUNT, BATCH, t_stop-t_start, cnn.duration))
 
   

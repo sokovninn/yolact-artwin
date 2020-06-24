@@ -21,6 +21,9 @@ from layers.output_utils import postprocess
 from eval import prep_display
 from data.config import Config, set_cfg
 
+import timeit
+
+
 class InfTool:
 
     def __init__(self,
@@ -68,6 +71,9 @@ class InfTool:
         print("YOLACT network available as self.net")
         self.args = args
 
+        #for debug,benchmark
+        self.duration=0.0
+
 
     def process_batch(self, img, batchsize=1):
         """
@@ -76,9 +82,12 @@ class InfTool:
         if not isinstance(img, list):
             img = [img]
             
+        start = timeit.default_timer()
         assert isinstance(img, list) and len(img) == batchsize, "Given batch {}, the provided 'img' must be a list of N images".format(batchsize)
         imgs = np.stack(img, axis=0)
         imgs = np.asarray(imgs, dtype=np.float32)
+        stop = timeit.default_timer()
+        self.duration+=(stop-start)
 
         frame = torch.from_numpy(imgs)
         frame = frame.cuda().float()
