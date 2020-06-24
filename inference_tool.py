@@ -21,6 +21,9 @@ from layers.output_utils import postprocess
 from eval import prep_display, parse_args
 from data.config import set_cfg
 
+import timeit
+
+
 class InfTool:
 
     def __init__(self,
@@ -57,23 +60,38 @@ class InfTool:
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
         #YOLACT net itself
-        net = Yolact().cuda()
-        net.load_weights(weights)
-        net.eval()
-        net.detect.use_fast_nms = True
-        net.detect.use_cross_class_nms = False
+        with torch.no_grad():
+            net = Yolact().cuda()
+            net.load_weights(weights)
+            net.eval()
+            net.detect.use_fast_nms = True
+            net.detect.use_cross_class_nms = False
 
         self.net = net
         print("YOLACT network available as self.net")
 
+        #for debug,benchmark
+        self.duration=0.0
 
-    def process_batch(self, img):
+
+    def process_batch(self, img, batchsize=1):
         """
         To speed up processing (avoids duplication if label_image & raw_inference is used)
         """
-        frame = torch.from_numpy(img).cuda().float() #TODO how to make frame/batch with multiple images at once?
-        batch = FastBaseTransform()(frame.unsqueeze(0))
-        preds = self.net(batch)
+        if not isinstance(img, list):
+            img = [img]
+            
+        start = timeit.default_timer()
+        imgs = np.stack(img, axis=0)
+        imgs = np.asarray(imgs, dtype=np.float32)
+        stop = timeit.default_timer()
+        self.duration+=(stop-start)
+
+        with torch.no_grad():
+            frame = torch.from_numpy(imgs)
+            frame = frame.cuda().float()
+            batch = FastBaseTransform()(frame)
+            preds = self.net(batch)
         return preds, frame
 
 
@@ -87,14 +105,16 @@ class InfTool:
         return processed
 
 
-    def raw_inference(self, img, preds=None):
+    def raw_inference(self, img, preds=None, frame=None, batch_idx=None):
         """
-        optional arg preds: if not None, avoids process_batch() call, used to speedup cached inferences.
+        optional arg preds, frame: if not None, avoids process_batch() call, used to speedup cached inferences.
         """
-        if preds is None:
-          preds, _ = self.process_batch(img)
-        w,h,_ = img.shape
-        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=0, interpolation_mode='bilinear', 
+        if preds is None or frame is None:
+          preds, frame = self.process_batch(img)
+        n,w,h,_ = frame.shape
+        if n > 1:
+            assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
+        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear', 
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
         return [classes, scores, boxes, masks] #TODO also compute and return centroids?
