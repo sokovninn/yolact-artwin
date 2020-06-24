@@ -69,12 +69,20 @@ class InfTool:
         self.args = args
 
 
-    def process_batch(self, img):
+    def process_batch(self, img, batchsize=1):
         """
         To speed up processing (avoids duplication if label_image & raw_inference is used)
         """
-        frame = torch.from_numpy(img).cuda().float() #TODO how to make frame/batch with multiple images at once?
-        batch = FastBaseTransform()(frame.unsqueeze(0))
+        if not isinstance(img, list):
+            img = [img]
+            
+        assert isinstance(img, list) and len(img) == batchsize, "Given batch {}, the provided 'img' must be a list of N images".format(batchsize)
+        imgs = np.stack(img, axis=0)
+        imgs = np.asarray(imgs, dtype=np.float32)
+
+        frame = torch.from_numpy(imgs)
+        frame = frame.cuda().float()
+        batch = FastBaseTransform()(frame)
         preds = self.net(batch)
         return preds, frame
 
@@ -90,14 +98,14 @@ class InfTool:
         return processed
 
 
-    def raw_inference(self, img, preds=None):
+    def raw_inference(self, img, preds=None, frame=None):
         """
-        optional arg preds: if not None, avoids process_batch() call, used to speedup cached inferences.
+        optional arg preds, frame: if not None, avoids process_batch() call, used to speedup cached inferences.
         """
-        if preds is None:
-          preds, _ = self.process_batch(img)
+        if preds is None or frame is None:
+          preds, frame = self.process_batch(img)
         global args
-        w,h,_ = img.shape
+        _,w,h,_ = frame.shape
         [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=0, interpolation_mode='bilinear', 
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=args.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
