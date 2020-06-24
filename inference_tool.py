@@ -18,8 +18,8 @@ from yolact import Yolact
 from data import set_cfg
 from utils.augmentations import FastBaseTransform
 from layers.output_utils import postprocess
-from eval import prep_display
-from data.config import Config, set_cfg
+from eval import prep_display, parse_args
+from data.config import set_cfg
 
 class InfTool:
 
@@ -27,11 +27,16 @@ class InfTool:
                  weights='./data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
                  config=None,
                  top_k=25,
-                 score_threshold=0.1
+                 score_threshold=0.1,
+                 display_text=True,
+                 display_bboxes=True,
+                 display_masks=True,
+                 display_scores=True,
                  ): 
+        self.score_threshold = score_threshold
+        self.top_k = top_k
+        
         # initialize a yolact net for inference
-        # print or override params here, see crow_yolact_wrapper.py for options
-
         ## YOLACT setup
         # setup config
         if config is not None:
@@ -39,19 +44,13 @@ class InfTool:
               with open(config,'rb') as f:
                   config = dill.load(f)
           set_cfg(config)
-        # setup yolact args #TODO there's a nicer way: yolact.eval.parse_args('.....')
-        global args
-        args=Config({})
-        args.top_k = top_k
-        args.score_threshold = score_threshold
-        # set here everything that would have been set by parsing arguments in yolact/eval.py:
-        args.display_lincomb = False
-        args.crop = False
-        args.display_fps = False
-        args.display_text = True
-        args.display_bboxes = True
-        args.display_masks =True
-        args.display_scores = True
+
+        parse_args(['--top_k='+str(top_k), 
+                    '--score_threshold='+str(score_threshold),
+                    '--display_text='+str(display_text),
+                    '--display_bboxes='+str(display_bboxes),
+                    '--display_masks='+str(display_masks),
+                    '--display_scores='+str(display_scores),])
 
         # CUDA setup for yolact
         torch.backends.cudnn.fastest = True
@@ -85,8 +84,7 @@ class InfTool:
         """
         if preds is None or frame is None:
           preds, frame = self.process_batch(img)
-        global args
-        processed = prep_display(preds, frame, h=None, w=None, undo_transform=False, args=args)
+        processed = prep_display(preds, frame, h=None, w=None, undo_transform=False)
         return processed
 
 
@@ -96,10 +94,9 @@ class InfTool:
         """
         if preds is None:
           preds, _ = self.process_batch(img)
-        global args
         w,h,_ = img.shape
         [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=0, interpolation_mode='bilinear', 
-                                                      visualize_lincomb=False, crop_masks=True, score_threshold=args.score_threshold)
+                                                      visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
         return [classes, scores, boxes, masks] #TODO also compute and return centroids?
 
