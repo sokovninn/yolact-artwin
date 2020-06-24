@@ -18,7 +18,7 @@ from yolact import Yolact
 from data import set_cfg
 from utils.augmentations import FastBaseTransform
 from layers.output_utils import postprocess
-from eval import prep_display
+from eval import prep_display, parse_args
 from data.config import Config, set_cfg
 
 class InfTool:
@@ -40,18 +40,27 @@ class InfTool:
                   config = dill.load(f)
           set_cfg(config)
         # setup yolact args #TODO there's a nicer way: yolact.eval.parse_args('.....')
-        global args
-        args=Config({})
-        args.top_k = top_k
-        args.score_threshold = score_threshold
-        # set here everything that would have been set by parsing arguments in yolact/eval.py:
-        args.display_lincomb = False
-        args.crop = False
-        args.display_fps = False
-        args.display_text = True
-        args.display_bboxes = True
-        args.display_masks =True
-        args.display_scores = True
+        # global args
+        # args=Config({})
+        # args.top_k = top_k
+        # args.score_threshold = score_threshold
+        # # set here everything that would have been set by parsing arguments in yolact/eval.py:
+        # args.display_lincomb = False
+        # args.crop = False
+        # args.display_fps = False
+        # args.display_text = True
+        # args.display_bboxes = True
+        # args.display_masks =True
+        # args.display_scores = True
+
+        parse_args(['--top_k='+str(top_k), 
+                    '--score_threshold='+str(score_threshold),
+                    '--display_lincomb='+str(False),
+                    '--no_crop',
+                    '--display_text='+str(True),
+                    '--display_bboxes='+str(True),
+                    '--display_masks='+str(True),
+                    '--display_scores='+str(True)])
 
         # CUDA setup for yolact
         torch.backends.cudnn.fastest = True
@@ -66,7 +75,7 @@ class InfTool:
 
         self.net = net
         print("YOLACT network available as self.net")
-        self.args = args
+        #self.args = args
 
 
     def process_batch(self, img):
@@ -85,8 +94,8 @@ class InfTool:
         """
         if preds is None or frame is None:
           preds, frame = self.process_batch(img)
-        global args
-        processed = prep_display(preds, frame, h=None, w=None, undo_transform=False, args=args)
+        #global args
+        processed = prep_display(preds, frame, h=None, w=None, undo_transform=False)
         return processed
 
 
@@ -96,10 +105,10 @@ class InfTool:
         """
         if preds is None:
           preds, _ = self.process_batch(img)
-        global args
+        #global args
         w,h,_ = img.shape
         [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=0, interpolation_mode='bilinear', 
-                                                      visualize_lincomb=False, crop_masks=True, score_threshold=args.score_threshold)
+                                                      visualize_lincomb=False, crop_masks=True, score_threshold=score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
         return [classes, scores, boxes, masks] #TODO also compute and return centroids?
 
