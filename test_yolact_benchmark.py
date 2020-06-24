@@ -10,7 +10,7 @@ import timeit
 
 IMGS='./data/yolact/datasets/dataset_kuka_env_pybullet_20/test/'
 COUNT=1000
-BATCH=4
+BATCH=30
 
 if __name__ == '__main__':
   cnn = InfTool(weights='./data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth', top_k=15, score_threshold=0.51, config='crow_base_config')

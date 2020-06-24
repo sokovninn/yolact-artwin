@@ -61,11 +61,12 @@ class InfTool:
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
         #YOLACT net itself
-        net = Yolact().cuda()
-        net.load_weights(weights)
-        net.eval()
-        net.detect.use_fast_nms = True
-        net.detect.use_cross_class_nms = False
+        with torch.no_grad():
+            net = Yolact().cuda()
+            net.load_weights(weights)
+            net.eval()
+            net.detect.use_fast_nms = True
+            net.detect.use_cross_class_nms = False
 
         self.net = net
         print("YOLACT network available as self.net")
@@ -83,16 +84,16 @@ class InfTool:
             img = [img]
             
         start = timeit.default_timer()
-        assert isinstance(img, list) and len(img) == batchsize, "Given batch {}, the provided 'img' must be a list of N images".format(batchsize)
         imgs = np.stack(img, axis=0)
         imgs = np.asarray(imgs, dtype=np.float32)
         stop = timeit.default_timer()
         self.duration+=(stop-start)
 
-        frame = torch.from_numpy(imgs)
-        frame = frame.cuda().float()
-        batch = FastBaseTransform()(frame)
-        preds = self.net(batch)
+        with torch.no_grad():
+            frame = torch.from_numpy(imgs)
+            frame = frame.cuda().float()
+            batch = FastBaseTransform()(frame)
+            preds = self.net(batch)
         return preds, frame
 
 
