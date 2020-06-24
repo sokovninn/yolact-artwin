@@ -98,15 +98,17 @@ class InfTool:
         return processed
 
 
-    def raw_inference(self, img, preds=None, frame=None):
+    def raw_inference(self, img, preds=None, frame=None, batch_idx=None):
         """
         optional arg preds, frame: if not None, avoids process_batch() call, used to speedup cached inferences.
         """
         if preds is None or frame is None:
           preds, frame = self.process_batch(img)
         global args
-        _,w,h,_ = frame.shape
-        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=0, interpolation_mode='bilinear', 
+        n,w,h,_ = frame.shape
+        if n > 1:
+            assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
+        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear', 
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=args.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
         return [classes, scores, boxes, masks] #TODO also compute and return centroids?
