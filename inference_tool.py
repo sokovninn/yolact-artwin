@@ -24,7 +24,7 @@ from data.config import set_cfg
 class InfTool:
 
     def __init__(self,
-                 weights='../crow_vision_yolact/data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
+                 weights='./data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
                  config=None,
                  top_k=25,
                  score_threshold=0.1,
@@ -65,7 +65,7 @@ class InfTool:
 
         self.net = net
         print("YOLACT network available as self.net")
-        #self.args = args
+        self.args = args
 
 
     def process_batch(self, img):
@@ -74,7 +74,7 @@ class InfTool:
         """
         frame = torch.from_numpy(img).cuda().float() #TODO how to make frame/batch with multiple images at once?
         batch = FastBaseTransform()(frame.unsqueeze(0))
-        preds = self.net(batch) #TODO provide (fast) alternative that uses existing batch, preds. From crow_vision::detector.py
+        preds = self.net(batch)
         return preds, frame
 
 
@@ -99,8 +99,4 @@ class InfTool:
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
         return [classes, scores, boxes, masks] #TODO also compute and return centroids?
-
-
-
-
 
