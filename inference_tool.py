@@ -65,7 +65,6 @@ class InfTool:
 
         self.net = net
         print("YOLACT network available as self.net")
-        self.args = args
 
 
     def process_batch(self, img):
