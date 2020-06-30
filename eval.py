@@ -598,7 +598,7 @@ def evalimage(net:Yolact, path:str, save_path:str=None):
     batch = FastBaseTransform()(frame.unsqueeze(0))
     preds = net(batch)
 
-    img_numpy = prep_display(preds, frame, None, None, undo_transform=False, args=args)
+    img_numpy = prep_display(preds, frame, None, None, undo_transform=False)
     
     if save_path is None:
         img_numpy = img_numpy[:, :, (2, 1, 0)]
@@ -710,7 +710,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
     def prep_frame(inp, fps_str):
         with torch.no_grad():
             frame, preds = inp
-            return prep_display(preds, frame, None, None, undo_transform=False, class_color=True, fps_str=fps_str, args=args)
+            return prep_display(preds, frame, None, None, undo_transform=False, class_color=True, fps_str=fps_str)
 
     frame_buffer = Queue()
     video_fps = 0
@@ -954,7 +954,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
                 preds = net(batch)
             # Perform the meat of the operation here depending on our mode.
             if args.display:
-                img_numpy = prep_display(preds, img, h, w, args=args)
+                img_numpy = prep_display(preds, img, h, w)
             elif args.benchmark:
                 prep_benchmark(preds, h, w)
             else:
