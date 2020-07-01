@@ -95,6 +95,8 @@ class InfTool:
         with torch.no_grad():
             frame = torch.from_numpy(imgs)
             frame = frame.cuda().float()
+            if self.batchsize == 1:
+                frame = frame.unsqueeze(0)
             batch = FastBaseTransform()(frame)
             preds = self.net(batch)
         return preds, frame
@@ -119,7 +121,7 @@ class InfTool:
         if self.batchsize > 1:
             n,w,h,_ = frame.shape
         else:
-            w,h,_ frame.shape
+            w,h,_ = frame.shape
 
         if self.batchsize > 1:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
