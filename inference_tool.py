@@ -29,6 +29,7 @@ class InfTool:
     def __init__(self,
                  weights='./data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
                  config=None,
+                 batchsize=1,
                  top_k=25,
                  score_threshold=0.1,
                  display_text=True,
@@ -38,6 +39,7 @@ class InfTool:
                  ): 
         self.score_threshold = score_threshold
         self.top_k = top_k
+        self.batchsize = batchsize
         
         # initialize a yolact net for inference
         ## YOLACT setup
@@ -74,18 +76,21 @@ class InfTool:
         self.duration=0.0
 
 
-    def process_batch(self, img, batchsize=1):
+    def process_batch(self, img):
         """
         To speed up processing (avoids duplication if label_image & raw_inference is used)
         """
-        if not isinstance(img, list):
-            img = [img]
-            
-        start = timeit.default_timer()
-        imgs = np.stack(img, axis=0)
-        imgs = np.asarray(imgs, dtype=np.float32)
-        stop = timeit.default_timer()
-        self.duration+=(stop-start)
+        if self.batchsize > 1: #batch-mode
+            assert isinstance(img, list), "Must be a list of numpy images"
+            start = timeit.default_timer()
+            imgs = np.stack(img, axis=0)
+            imgs = np.asarray(imgs, dtype=np.float32)
+            stop = timeit.default_timer()
+            self.duration+=(stop-start)
+        else:
+            assert isinstance(img, np.ndarray)
+            imgs = img
+
 
         with torch.no_grad():
             frame = torch.from_numpy(imgs)
@@ -111,9 +116,14 @@ class InfTool:
         """
         if preds is None or frame is None:
           preds, frame = self.process_batch(img)
-        n,w,h,_ = frame.shape
-        if n > 1:
+        if self.batchsize > 1:
+            n,w,h,_ = frame.shape
+        else:
+            w,h,_ frame.shape
+
+        if self.batchsize > 1:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
+
         [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear', 
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
