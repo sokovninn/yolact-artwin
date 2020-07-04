@@ -89,9 +89,6 @@ args = parser.parse_args()
 if args.config is not None:
     set_cfg(args.config)
 
-with open('./data/yolact/weights/config_train.obj', 'wb') as f:
-    dill.dump(cfg, f)
-
 if args.dataset is not None:
     set_dataset(args.dataset)
 
@@ -142,6 +139,9 @@ if torch.cuda.is_available():
 else:
     torch.set_default_tensor_type('torch.FloatTensor')
 
+with open('./data/yolact/weights/config_train.obj', 'wb') as f:
+    dill.dump(cfg, f)
+    
 class NetLoss(nn.Module):
     """
     A wrapper for running the network and computing the loss
