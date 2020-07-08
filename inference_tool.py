@@ -1,8 +1,8 @@
 # This class works as a convenience wrapper over the YOLACT
 # functionality, allowing you to import and call yolact INFERENCE
-# conveniently in an object-oriented manner. 
+# conveniently in an object-oriented manner.
 #
-# Existing and working YOLACT installation is necessary. 
+# Existing and working YOLACT installation is necessary.
 
 import sys
 import os
@@ -36,11 +36,11 @@ class InfTool:
                  display_bboxes=True,
                  display_masks=True,
                  display_scores=True,
-                 ): 
+                 ):
         self.score_threshold = score_threshold
         self.top_k = top_k
         self.batchsize = batchsize
-        
+
         # initialize a yolact net for inference
         ## YOLACT setup
         # setup config
@@ -50,7 +50,7 @@ class InfTool:
                   config = dill.load(f)
           set_cfg(config)
 
-        parse_args(['--top_k='+str(top_k), 
+        parse_args(['--top_k='+str(top_k),
                     '--score_threshold='+str(score_threshold),
                     '--display_text='+str(display_text),
                     '--display_bboxes='+str(display_bboxes),
@@ -112,22 +112,24 @@ class InfTool:
         return processed
 
 
-    def raw_inference(self, img, preds=None, frame=None, batch_idx=None):
+    def raw_inference(self, img, preds=None, frame=None, batch_idx=0):
         """
         optional arg preds, frame: if not None, avoids process_batch() call, used to speedup cached inferences.
         """
         if preds is None or frame is None:
           preds, frame = self.process_batch(img)
-        if self.batchsize > 1:
-            n,w,h,_ = frame.shape
+        if frame.ndim == 4:
+            n, w, h, _ = frame.shape
+        elif frame.ndim == 3:
+            w, h, _ = frame.shape
         else:
-            w,h,_ = frame.shape
+            print("Oops, the frame has unexpected number of dimensions")
 
         if self.batchsize > 1:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
 
-        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear', 
+        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
         #TODO do we want to keep tensor, or convert to py list[]?
-        return [classes, scores, boxes, masks] #TODO also compute and return centroids?
+        return classes, scores, boxes, masks #TODO also compute and return centroids?
 
