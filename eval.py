@@ -142,7 +142,10 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
         img_gpu = torch.Tensor(img_numpy).cuda()
     else:
         img_gpu = img / 255.0
-        _, h, w, _ = img.shape #batch,h,w,c
+        if len(img.shape) > 3:
+            _, h, w, _ = img.shape #batch,h,w,c
+        else:
+            h, w, _ = img.shape
     
     with timer.env('Postprocess'):
         save = cfg.rescore_bbox
