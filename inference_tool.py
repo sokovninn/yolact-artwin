@@ -111,7 +111,7 @@ class InfTool:
         processed = prep_display(preds, frame, h=None, w=None, undo_transform=False)
         return processed
 
-i
+
     def find_centroids_(image, numobj):
         """
         helper method, finds and visualizes centroids of objects in picture
@@ -145,13 +145,11 @@ i
         if self.batchsize > 1:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
 
-        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
+        t = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
-
-        #FIXME honor top_k limit
-        #t = postprocess(preds_raw, w, h, score_threshold=args.score_threshold)
-        #idx = t[1].argsort(0, descending=True)[:args.top_k]
-        #classes, scores, boxes, masks = [x[idx].cpu().numpy() for x in t[:4]] #x[idx] or x[idx].cpu().numpy()
+        #honor top_k limit
+        idx = t[1].argsort(0, descending=True)[:self.top_k]
+        classes, scores, boxes, masks = [x[idx].cpu().numpy() for x in t[:4]] #x[idx] or x[idx].cpu().numpy()
         
         # also get centroids
         centroids=[]
