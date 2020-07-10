@@ -30,7 +30,7 @@ if __name__ == '__main__':
   for batch in batches:
       #actual inference
       preds, frame = cnn.process_batch(batch, batchsize=BATCH)
-      classes, scores, bboxes, masks = cnn.raw_inference(None, preds=preds, frame=frame, batch_idx=0)
+      classes, scores, bboxes, masks, centroids = cnn.raw_inference(None, preds=preds, frame=frame, batch_idx=0)
   t_stop = timeit.default_timer()
 
   print("Running {} jobs with batch size {} took {} seconds, stacking images took {}.".format(COUNT, BATCH, t_stop-t_start, cnn.duration))
