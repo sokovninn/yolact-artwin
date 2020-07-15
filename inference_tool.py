@@ -112,6 +112,23 @@ class InfTool:
         return processed
 
 
+    def find_centroids_(image, numobj):
+        """
+        helper method, finds and visualizes centroids of objects in picture
+        """
+        _, _, _, centroids = cv2.connectedComponentsWithStats(image.astype(np.uint8), cv2.CV_32S)
+
+        # visualize centroids
+        #for centroid in centroids[1:numobj + 1]:
+        #    cv2.circle(image, (int(centroid[0]), int(centroid[1])), radius=10, color=(255, 0, 0), thickness=-1)
+        #    cv2.imshow('centroids',image)
+        #    cv2.waitKey(1000)
+        try:
+            return centroids[1]
+        except:
+            return centroids
+
+
     def raw_inference(self, img, preds=None, frame=None, batch_idx=0):
         """
         optional arg preds, frame: if not None, avoids process_batch() call, used to speedup cached inferences.
@@ -128,8 +145,20 @@ class InfTool:
         if self.batchsize > 1:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
 
-        [classes, scores, boxes, masks] = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
+        t = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
                                                       visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
+        #honor top_k limit
+        idx = t[1].argsort(0, descending=True)[:self.top_k]
+        classes, scores, boxes, masks = [x[idx].cpu().numpy() for x in t[:4]] #x[idx] or x[idx].cpu().numpy()
+        
+        # also get centroids
+        centroids=[]
+        for i in range(len(masks)):
+            #cv2.imshow('bin_mask',masks[i])
+            #cv2.waitKey(200)
+            #if classes[i] > 0: #kuka class
+            centroids.append(find_centroids_(masks[i], 1)) #in pixel space
+
         #TODO do we want to keep tensor, or convert to py list[]?
-        return classes, scores, boxes, masks #TODO also compute and return centroids?
+        return classes, scores, boxes, masks, centroids
 
