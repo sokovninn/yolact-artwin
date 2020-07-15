@@ -113,7 +113,7 @@ class InfTool:
         return processed
 
 
-    def find_centroids_(image, numobj):
+    def find_centroids_(self, image, numobj):
         """
         helper method, finds and visualizes centroids of objects in picture
         """
@@ -158,7 +158,7 @@ class InfTool:
             #cv2.imshow('bin_mask',masks[i])
             #cv2.waitKey(200)
             #if classes[i] > 0: #kuka class
-            centroids.append(find_centroids_(masks[i], 1)) #in pixel space
+            centroids.append(self.find_centroids_(masks[i], 1)) #in pixel space
 
         #TODO do we want to keep tensor, or convert to py list[]?
         return classes, scores, boxes, masks, centroids
