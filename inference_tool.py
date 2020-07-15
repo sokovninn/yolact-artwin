@@ -27,7 +27,7 @@ import timeit
 class InfTool:
 
     def __init__(self,
-                 weights='./data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
+                 weights='./crow_vision_yolact/data/yolact/weights/weights_yolact_kuka_17/crow_base_35_457142.pth',
                  config=None,
                  batchsize=1,
                  top_k=25,
@@ -48,6 +48,7 @@ class InfTool:
           if '.obj' in config:
               with open(config,'rb') as f:
                   config = dill.load(f)
+          print("XXXX {} typeof {}".format(config, type(config)))
           set_cfg(config)
 
         parse_args(['--top_k='+str(top_k),
