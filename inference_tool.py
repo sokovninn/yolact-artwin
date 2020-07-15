@@ -108,7 +108,7 @@ class InfTool:
         """
         if preds is None or frame is None:
           preds, frame = self.process_batch(img)
-        processed = prep_display(preds, frame, h=None, w=None, undo_transform=False)
+        processed = prep_display(preds, frame.squeeze(0), h=None, w=None, undo_transform=False)
         return processed
 
 
