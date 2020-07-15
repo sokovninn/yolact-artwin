@@ -13,7 +13,8 @@ patterns = {
 ### CROW
 # class names that are tracked in the log file
 #class_names=["All Classes", "kuka_left", "kuka_right", "cube_holes", "hammer", "klic", "matka", "screw_long", "screw_short", "screwdriver_simple", "sroub", "wheel", "wood_3", "wood_4", "wood_round", "wrench"]
-class_names=["All Classes ", "kuka ", "cube_holes ", "hammer ", "wrench ", "nut ", "screw ", "screwdriver ", "wheel ", "wood_3 ", "wood_4 ", "wood_round "]
+#class_names=["All Classes ", "kuka ", "cube_holes ", "hammer ", "wrench ", "nut ", "screw ", "screwdriver ", "wheel ", "wood_3 ", "wood_4 ", "wood_round "]
+class_names=["All Classes ", "kuka ", "car_roof ", "cube_holes ", "ex_bucket ", "hammer ", "nut ", "peg_screw ", "pliers ", "screw_round ", "screwdriver ", "sphere_holes ","wafer ", "wheel ", "wrench "]
 
 data = {key: [] for key in patterns}
 data['val'] = {key: [] for key in class_names}
@@ -77,6 +78,7 @@ def plot_train(data):
 
 	plt.legend(loss_names)
 	#ax.set_xlim(0, xlim)
+	ax.set_ylim(0, 1)
 	plt.savefig('./data/yolact/weights/fig_loss_{}.png'.format(xlim))
     #plt.show()
 
