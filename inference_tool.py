@@ -47,9 +47,9 @@ class InfTool:
         if config is not None:
           if '.obj' in config:
               with open(config,'rb') as f:
-                  config = dill.load(f)
+                  self.config = dill.load(f)
           print("XXXX {} typeof {}".format(config, type(config)))
-          set_cfg(config)
+          set_cfg(self.config)
 
         parse_args(['--top_k='+str(top_k),
                     '--score_threshold='+str(score_threshold),
@@ -153,13 +153,14 @@ class InfTool:
         classes, scores, boxes, masks = [x[idx].cpu().numpy() for x in t[:4]] #x[idx] or x[idx].cpu().numpy()
         
         # also get centroids
-        centroids=[]
+        centroids = []
         for i in range(len(masks)):
             #cv2.imshow('bin_mask',masks[i])
             #cv2.waitKey(200)
             #if classes[i] > 0: #kuka class
             centroids.append(self.find_centroids_(masks[i], 1)) #in pixel space
 
+        class_names = [self.config.dataset.class_names[x] for x in classes]
         #TODO do we want to keep tensor, or convert to py list[]?
-        return classes, scores, boxes, masks, centroids
+        return classes, class_names, scores, boxes, masks, centroids
 
