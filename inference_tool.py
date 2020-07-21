@@ -137,9 +137,9 @@ class InfTool:
         if preds is None or frame is None:
           preds, frame = self.process_batch(img)
         if frame.ndim == 4:
-            n, w, h, _ = frame.shape
+            n, h, w, _ = frame.shape
         elif frame.ndim == 3:
-            w, h, _ = frame.shape
+            h, w, _ = frame.shape
         else:
             print("Oops, the frame has unexpected number of dimensions")
 
