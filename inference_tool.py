@@ -48,6 +48,8 @@ class InfTool:
           if '.obj' in config:
               with open(config,'rb') as f:
                   self.config = dill.load(f)
+          else:
+              self.config = config
           print("XXXX {} typeof {}".format(config, type(config)))
           set_cfg(self.config)
 
