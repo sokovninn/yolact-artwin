@@ -1071,7 +1071,8 @@ def print_maps(all_maps):
     print(make_sep(len(all_maps['box']) + 1))
     print()
 
-
+def get_class_names_tuple():
+    return cfg.dataset.class_names
 
 if __name__ == '__main__':
     parse_args()

@@ -18,7 +18,7 @@ from yolact import Yolact
 from data import set_cfg
 from utils.augmentations import FastBaseTransform
 from layers.output_utils import postprocess
-from eval import prep_display, parse_args
+from eval import prep_display, parse_args, get_class_names_tuple
 from data.config import set_cfg
 
 import timeit
@@ -47,11 +47,10 @@ class InfTool:
         if config is not None:
           if '.obj' in config:
               with open(config,'rb') as f:
-                  self.config = dill.load(f)
-          else:
-              self.config = config
+                  config = dill.load(f)
           print("XXXX {} typeof {}".format(config, type(config)))
-          set_cfg(self.config)
+          set_cfg(config)
+        self.class_names_tuple = get_class_names_tuple()
 
         parse_args(['--top_k='+str(top_k),
                     '--score_threshold='+str(score_threshold),
@@ -162,7 +161,7 @@ class InfTool:
             #if classes[i] > 0: #kuka class
             centroids.append(self.find_centroids_(masks[i], 1)) #in pixel space
 
-        class_names = [self.config.dataset.class_names[x] for x in classes]
+        class_names = [self.class_names_tuple[x] for x in classes]
         #TODO do we want to keep tensor, or convert to py list[]?
         return classes, class_names, scores, boxes, masks, centroids
 
