@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 import pkg_resources
 import dill
+import numpy as np
 
 # import YOLACT
 sys.path.append(os.path.relpath("."))
@@ -165,3 +166,25 @@ class InfTool:
         #TODO do we want to keep tensor, or convert to py list[]?
         return classes, class_names, scores, boxes, masks, centroids
 
+
+    def find_3d_centroids_(self, image, depth, matrix):
+        pixel_mask = np.where(image == 1.0)
+        pixel_mask = list(zip(*pixel_mask))
+        pixel_mask = list(map(list, pixel_mask)) #in camera image
+
+        object_point_cloud = []
+        for point in pixel_mask:
+            position = project_camera_and_depth_image_to_world_3d_point([point[1],point[0]],depth,matrix)
+            if -1.5 < position[0] < 1.5 and -1.5 < position[1] < 1.5: #fix for remove outliers
+                object_point_cloud.append(position)
+        object_3d_centroid = np.mean(object_point_cloud,axis=0) # in world
+        return object_3d_centroid
+
+def project_camera_and_depth_image_to_world_3d_point(pixel_point,depth_image,matrix):
+    x = (2*pixel_point[0] - depth_image.shape[0])/depth_image.shape[0]
+    y = -(2*pixel_point[1] - depth_image.shape[1])/depth_image.shape[1]  # be careful！ deepth and its corresponding position
+    z = 2*depth_image[pixel_point[1],pixel_point[0]] - 1
+    pixPos = np.asarray([x, y, z, 1])
+    position = np.matmul(pixPos, np.linalg.inv(np.asarray(matrix, dtype=np.float64).reshape(4,4)))
+    position = position[:3]/position[3]
+    return position
