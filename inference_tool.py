@@ -49,7 +49,6 @@ class InfTool:
           if '.obj' in config:
               with open(config,'rb') as f:
                   config = dill.load(f)
-          print("XXXX {} typeof {}".format(config, type(config)))
           set_cfg(config)
         self.class_names_tuple = get_class_names_tuple()
 
@@ -149,7 +148,7 @@ class InfTool:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
 
         t = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
-                                                      visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
+                                                      visualize_lincomb=False, crop_masks=False, score_threshold=self.score_threshold)
         #honor top_k limit
         idx = t[1].argsort(0, descending=True)[:self.top_k]
         classes, scores, boxes, masks = [x[idx].cpu().numpy() for x in t[:4]] #x[idx] or x[idx].cpu().numpy()
