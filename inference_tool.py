@@ -36,7 +36,7 @@ class InfTool:
                  display_text=True,
                  display_bboxes=True,
                  display_masks=True,
-                 display_scores=True,
+                 display_scores=True
                  ):
         self.score_threshold = score_threshold
         self.top_k = top_k
@@ -142,16 +142,21 @@ class InfTool:
         elif frame.ndim == 3:
             h, w, _ = frame.shape
         else:
-            print("Oops, the frame has unexpected number of dimensions")
+            assert False, "Oops, the frame has unexpected number of dimensions: {}".format(frame.shape)
 
         if self.batchsize > 1:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
 
         t = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
-                                                      visualize_lincomb=False, crop_masks=False, score_threshold=self.score_threshold)
+                   visualize_lincomb=False, crop_masks=False, score_threshold=self.score_threshold)
+
         #honor top_k limit
-        idx = t[1].argsort(0, descending=True)[:self.top_k]
+        col_scores = 1
+        idx = t[col_scores].argsort(0, descending=True)[:self.top_k]
         classes, scores, boxes, masks = [x[idx].cpu().numpy() for x in t[:4]] #x[idx] or x[idx].cpu().numpy()
+        assert len(classes) == len(scores) == len(masks)
+
+
         
         # also get centroids
         centroids = []
@@ -163,6 +168,7 @@ class InfTool:
 
         class_names = [self.class_names_tuple[x] for x in classes]
         #TODO do we want to keep tensor, or convert to py list[]?
+        assert len(classes) <= self.top_k
         return classes, class_names, scores, boxes, masks, centroids
 
 
