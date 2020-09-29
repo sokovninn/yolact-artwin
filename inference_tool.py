@@ -121,7 +121,7 @@ class InfTool:
         _, _, _, centroids = cv2.connectedComponentsWithStats(image.astype(np.uint8), cv2.CV_32S)
 
         # visualize centroids
-        #for centroid in centroids[1:numobj + 1]:
+        # for centroid in centroids[1:numobj + 1]:
         #    cv2.circle(image, (int(centroid[0]), int(centroid[1])), radius=10, color=(255, 0, 0), thickness=-1)
         #    cv2.imshow('centroids',image)
         #    cv2.waitKey(1000)
@@ -148,7 +148,7 @@ class InfTool:
             assert batch_idx is not None, "In batch mode, you must provide batch_idx - meaning which row of batch is used as the results, [0, {}-1]".format(n)
 
         t = postprocess(preds, w=w, h=h, batch_idx=batch_idx, interpolation_mode='bilinear',
-                   visualize_lincomb=False, crop_masks=False, score_threshold=self.score_threshold)
+                   visualize_lincomb=False, crop_masks=True, score_threshold=self.score_threshold)
 
         #honor top_k limit
         col_scores = 1
