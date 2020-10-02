@@ -186,8 +186,8 @@ class InfTool:
         return object_3d_centroid
 
 def project_camera_and_depth_image_to_world_3d_point(pixel_point,depth_image,matrix):
-    x = (2*pixel_point[0] - depth_image.shape[0])/depth_image.shape[0]
-    y = -(2*pixel_point[1] - depth_image.shape[1])/depth_image.shape[1]  # be careful！ deepth and its corresponding position
+    x = (2*pixel_point[0] - depth_image.shape[1])/depth_image.shape[1]
+    y = -(2*pixel_point[1] - depth_image.shape[0])/depth_image.shape[0]  # be careful！ depth and its corresponding position
     z = 2*depth_image[pixel_point[1],pixel_point[0]] - 1
     pixPos = np.asarray([x, y, z, 1])
     position = np.matmul(pixPos, np.linalg.inv(np.asarray(matrix, dtype=np.float64).reshape(4,4)))
