@@ -42,22 +42,24 @@ def postprocess(det_output, w, h, batch_idx=0, interpolation_mode='bilinear',
     if score_threshold > 0:
         keep = dets['score'] > score_threshold
 
+        dets_det_kept = {}
+        dets_det_kept['proto'] = dets['proto']
         for k in dets:
             if k != 'proto':
-                dets[k] = dets[k][keep]
+                dets_det_kept[k] = dets[k][keep]
         
-        if dets['score'].size(0) == 0:
+        if dets_det_kept['score'].size(0) == 0:
             return [torch.Tensor()] * 4
     
-    # Actually extract everything from dets now
-    classes = dets['class']
-    boxes   = dets['box']
-    scores  = dets['score']
-    masks   = dets['mask']
+    # Actually extract everything from dets_det_kept now
+    classes = dets_det_kept['class']
+    boxes   = dets_det_kept['box']
+    scores  = dets_det_kept['score']
+    masks   = dets_det_kept['mask']
 
     if cfg.mask_type == mask_type.lincomb and cfg.eval_mask_branch:
         # At this points masks is only the coefficients
-        proto_data = dets['proto']
+        proto_data = dets_det_kept['proto']
         
         # Test flag, do not upvote
         #if cfg.mask_proto_debug: #MEGI makes troubles
