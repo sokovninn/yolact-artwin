@@ -81,7 +81,7 @@ YOLACT++ models (released on December 16th, 2019):
 
 To evalute the model, put the corresponding weights file in the `./weights` directory and run one of the following commands. The name of each config is everything before the numbers in the file name (e.g., `yolact_base` for `yolact_base_54_800000.pth`).
 ## Quantitative Results on COCO
-```Shell
+```bash
 # Quantitatively evaluate a trained model on the entire validation set. Make sure you have COCO downloaded as above.
 # This should get 29.92 validation mask mAP last time I checked.
 python eval.py --trained_model=weights/yolact_base_54_800000.pth
@@ -97,17 +97,17 @@ python run_coco_eval.py
 python eval.py --trained_model=weights/yolact_base_54_800000.pth --output_coco_json --dataset=coco2017_testdev_dataset
 ```
 ## Qualitative Results on COCO
-```Shell
+```bash
 # Display qualitative results on COCO. From here on I'll use a confidence threshold of 0.15.
 python eval.py --trained_model=weights/yolact_base_54_800000.pth --score_threshold=0.15 --top_k=15 --display
 ```
 ## Benchmarking on COCO
-```Shell
+```bash
 # Run just the raw model on the first 1k images of the validation set
 python eval.py --trained_model=weights/yolact_base_54_800000.pth --benchmark --max_images=1000
 ```
 ## Images
-```Shell
+```bash
 # Display qualitative results on the specified image.
 python eval.py --trained_model=weights/yolact_base_54_800000.pth --score_threshold=0.15 --top_k=15 --image=my_image.png
 
@@ -118,7 +118,7 @@ python eval.py --trained_model=weights/yolact_base_54_800000.pth --score_thresho
 python eval.py --trained_model=weights/yolact_base_54_800000.pth --score_threshold=0.15 --top_k=15 --images=path/to/input/folder:path/to/output/folder
 ```
 ## Video
-```Shell
+```bash
 # Display a video in real-time. "--video_multiframe" will process that many frames at once for improved performance.
 # If you want, use "--display_fps" to draw the FPS directly on the frame.
 python eval.py --trained_model=weights/yolact_base_54_800000.pth --score_threshold=0.15 --top_k=15 --video_multiframe=4 --video=my_video.mp4
@@ -130,7 +130,7 @@ python eval.py --trained_model=weights/yolact_base_54_800000.pth --score_thresho
 python eval.py --trained_model=weights/yolact_base_54_800000.pth --score_threshold=0.15 --top_k=15 --video_multiframe=4 --video=input_video.mp4:output_video.mp4
 ```
 As you can tell, `eval.py` can do a ton of stuff. Run the `--help` command to see everything it can do.
-```Shell
+```bash
 python eval.py --help
 ```
 
@@ -144,7 +144,7 @@ By default, we train on COCO. Make sure to download the entire dataset using the
  - Run one of the training commands below.
    - Note that you can press ctrl+c while training and it will save an `*_interrupt.pth` file at the current iteration.
    - All weights are saved in the `./weights` directory by default with the file name `<config>_<epoch>_<iter>.pth`.
-```Shell
+```bash
 # Trains using the base config with a batch size of 8 (the default).
 python train.py --config=yolact_base_config
 
@@ -192,7 +192,7 @@ You can also train on your own dataset by following these steps:
    - Under `image`: `license, flickr_url, coco_url, date_captured`
    - `categories` (we use our own format for categories, see below)
  - Create a definition for your dataset under `dataset_base` in `data/config.py` (see the comments in `dataset_base` for an explanation of each field):
-```Python
+```python
 my_custom_dataset = dataset_base.copy({
     'name': 'My Dataset',
 
