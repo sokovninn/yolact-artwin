@@ -43,6 +43,11 @@ COCO_CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
                 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase',
                 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
 
+COCO_ARTWIN_CLASSES = ('cart', 'computer', 'crane', 'forklift', 'machine', 'mobile_rack',
+                'pallets', 'pile_of_boxes', 'trash_can', 'workstation', 'book',
+                'cell phone', 'chair', 'clock', 'couch', 'dining table', 'keyboard',
+                'laptop', 'mouse', 'person')
+
 COCO_LABEL_MAP = { 1:  1,  2:  2,  3:  3,  4:  4,  5:  5,  6:  6,  7:  7,  8:  8,
                    9:  9, 10: 10, 11: 11, 13: 12, 14: 13, 15: 14, 16: 15, 17: 16,
                   18: 17, 19: 18, 20: 19, 21: 20, 22: 21, 23: 22, 24: 23, 25: 24,
@@ -54,6 +59,9 @@ COCO_LABEL_MAP = { 1:  1,  2:  2,  3:  3,  4:  4,  5:  5,  6:  6,  7:  7,  8:  8
                   74: 65, 75: 66, 76: 67, 77: 68, 78: 69, 79: 70, 80: 71, 81: 72,
                   82: 73, 84: 74, 85: 75, 86: 76, 87: 77, 88: 78, 89: 79, 90: 80}
 
+COCO_ARTWIN_LABEL_MAP = { 91:  1,  92:  2,  93:  3,  94:  4,  95:  5,  96:  6,  97:  7,  98:  8,
+                   99:  9, 100: 10, 11: 11, 12: 12, 13: 13, 14: 14, 15: 15, 16: 16,
+                  17: 17, 18: 18, 19: 19, 20: 20}
 
 
 # ----------------------- CONFIG CLASS ----------------------- #
@@ -153,6 +161,21 @@ coco2017_testdev_dataset = dataset_base.copy({
     'has_gt': False,
 
     'label_map': COCO_LABEL_MAP
+})
+
+coco_artwin_dataset = dataset_base.copy({
+    'name': 'COCO-Artwin Dataset',
+
+    'train_images': "/local/datagen/datasets/coco_artwin_dataset/images/train",
+    'train_info':   "/local/datagen/datasets/coco_artwin_dataset/annotations/train.json",
+
+    'valid_images': "/local/datagen/datasets/coco_artwin_dataset/images/val",
+    'valid_info':   "/local/datagen/datasets/coco_artwin_dataset/annotations/val.json",
+
+    'has_gt': True,
+
+    'class_names': COCO_ARTWIN_CLASSES,
+    'label_map': COCO_ARTWIN_LABEL_MAP
 })
 
 PASCAL_CLASSES = ("aeroplane", "bicycle", "bird", "boat", "bottle",
@@ -982,6 +1005,32 @@ crow_base_config = yolact_base_config.copy({ #see yolact_base_config for all the
     'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
     'pred_scales': PRED_SCALES, #crow
   }),  
+
+})
+
+coco_artwin_base_config = yolact_base_config.copy({ #see yolact_base_config for all the params that can be changed. Add below what you want to alter.
+  'name': 'coco_artwin_base',
+  # Dataset stuff
+  'dataset': coco_artwin_dataset, #kuka_env_pybullet_dataset
+  'num_classes': len(coco_artwin_dataset.class_names) + 1, #The +1 stands for "background" class
+
+  # Image Size
+  'max_size': max_size,
+
+  # Training params
+  'lr_steps': (280000, 600000, 700000, 750000),
+  'max_iter': 400000,
+
+  # Backbone Settings
+  'backbone': resnet101_backbone.copy({
+    'selected_layers': list(range(1, 4)),
+    'use_pixel_scales': True,
+    'preapply_sqrt': False,
+    'use_square_anchors': True, # This is for backward compatability with a bug
+
+    'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
+    'pred_scales': PRED_SCALES, #crow
+  }),
 
 })
 
