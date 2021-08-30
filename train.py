@@ -139,7 +139,7 @@ if torch.cuda.is_available():
 else:
     torch.set_default_tensor_type('torch.FloatTensor')
 
-with open('./data/yolact/weights/config_train.obj', 'wb') as f:
+with open('data/weights/trained/config_train.obj', 'wb') as f:
     dill.dump(cfg, f)
     
 class NetLoss(nn.Module):
