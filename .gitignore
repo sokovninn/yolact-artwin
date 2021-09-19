@@ -136,7 +136,8 @@ data/VOCdevkit/
 data/coco/images/
 data/coco/annotations/
 ap_data.pkl
-results/
+results/*
+!results/.gitkeep
 logs/
 scripts/aws/
 scripts/gt.npy
