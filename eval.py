@@ -104,7 +104,7 @@ def parse_args(argv=None):
                         help='A path to a video to evaluate on. Passing in a number will use that index webcam.')
     parser.add_argument('--video_multiframe', default=1, type=int,
                         help='The number of frames to evaluate in parallel to make videos play at higher fps.')
-    parser.add_argument('--score_threshold', default=0, type=float,
+    parser.add_argument('--score_threshold', default=0.15, type=float,
                         help='Detections with a score under this threshold will not be considered. This currently only works in display mode.')
     parser.add_argument('--dataset', default=None, type=str,
                         help='If specified, override the dataset specified in the config with this one (example: coco2017_dataset).')
@@ -124,7 +124,7 @@ def parse_args(argv=None):
 
     if args.output_web_json:
         args.output_coco_json = True
-    
+
     if args.seed is not None:
         random.seed(args.seed)
 
@@ -146,7 +146,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
             _, h, w, _ = img.shape #batch,h,w,c
         else:
             h, w, _ = img.shape
-    
+
     with timer.env('Postprocess'):
         save = cfg.rescore_bbox
         cfg.rescore_bbox = True
@@ -157,7 +157,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
 
     with timer.env('Copy'):
         idx = t[1].argsort(0, descending=True)[:args.top_k]
-        
+
         if cfg.eval_mask_branch:
             # Masks are drawn on the GPU, so don't copy
             masks = t[3][idx]
@@ -174,7 +174,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
     def get_color(j, on_gpu=None):
         global color_cache
         color_idx = (classes[j] * 5 if class_color else j * 5) % len(COLORS)
-        
+
         if on_gpu is not None and color_idx in color_cache[on_gpu]:
             return color_cache[on_gpu][color_idx]
         else:
@@ -193,14 +193,14 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
     if args.display_masks and cfg.eval_mask_branch and num_dets_to_consider > 0:
         # After this, mask is of size [num_dets, h, w, 1]
         masks = masks[:num_dets_to_consider, :, :, None]
-        
+
         # Prepare the RGB images for each mask given their color (size [num_dets, h, w, 1])
         colors = torch.cat([get_color(j, on_gpu=img_gpu.device.index).view(1, 1, 1, 3) for j in range(num_dets_to_consider)], dim=0)
         masks_color = masks.repeat(1, 1, 1, 3) * colors * mask_alpha
 
         # This is 1 everywhere except for 1-mask_alpha where the mask is
         inv_alph_masks = masks * (-mask_alpha) + 1
-        
+
         # I did the math for this on pen and paper. This whole block should be equivalent to:
         #    for j in range(num_dets_to_consider):
         #        img_gpu = img_gpu * inv_alph_masks[j] + masks_color[j]
@@ -211,7 +211,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
             masks_color_summand += masks_color_cumul.sum(dim=0)
 
         img_gpu = img_gpu * inv_alph_masks.prod(dim=0) + masks_color_summand
-    
+
     if args.display_fps:
             # Draw the box for the fps on the GPU
         font_face = cv2.FONT_HERSHEY_DUPLEX
@@ -233,7 +233,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
         text_color = [255, 255, 255]
 
         cv2.putText(img_numpy, fps_str, text_pt, font_face, font_scale, text_color, font_thickness, cv2.LINE_AA)
-    
+
     if num_dets_to_consider == 0:
         return img_numpy
 
@@ -261,8 +261,8 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
 
                 cv2.rectangle(img_numpy, (x1, y1), (x1 + text_w, y1 - text_h - 4), color, -1)
                 cv2.putText(img_numpy, text_str, text_pt, font_face, font_scale, text_color, font_thickness, cv2.LINE_AA)
-            
-    
+
+
     return img_numpy
 
 def prep_benchmark(dets_out, h, w):
@@ -279,7 +279,7 @@ def prep_benchmark(dets_out, h, w):
         classes = classes.cpu().numpy()
         boxes = boxes.cpu().numpy()
         masks = masks.cpu().numpy()
-    
+
     with timer.env('Sync'):
         # Just in case
         torch.cuda.synchronize()
@@ -332,7 +332,7 @@ class Detections:
             'segmentation': rle,
             'score': float(score)
         })
-    
+
     def dump(self):
         dump_arguments = [
             (self.bbox_data, args.bbox_det_file),
@@ -342,7 +342,7 @@ class Detections:
         for data, path in dump_arguments:
             with open(path, 'w') as f:
                 json.dump(data, f)
-    
+
     def dump_web(self):
         """ Dumps it in the format for my web app. Warning: bad code ahead! """
         config_outs = ['preserve_aspect_ratio', 'use_prediction_module',
@@ -373,9 +373,9 @@ class Detections:
 
         with open(os.path.join(args.web_det_path, '%s.json' % cfg.name), 'w') as f:
             json.dump(output, f)
-        
 
-        
+
+
 
 def _mask_iou(mask1, mask2, iscrowd=False):
     with timer.env('Mask IoU'):
@@ -431,7 +431,7 @@ def prep_metrics(ap_data, dets, img, gt, gt_masks, h, w, num_crowd, image_id, de
                     detections.add_bbox(image_id, classes[i], boxes[i,:],   box_scores[i])
                     detections.add_mask(image_id, classes[i], masks[i,:,:], mask_scores[i])
             return
-    
+
     with timer.env('Eval Setup'):
         num_pred = len(classes)
         num_gt   = len(gt_classes)
@@ -462,32 +462,32 @@ def prep_metrics(ap_data, dets, img, gt, gt_masks, h, w, num_crowd, image_id, de
     for _class in set(classes + gt_classes):
         ap_per_iou = []
         num_gt_for_class = sum([1 for x in gt_classes if x == _class])
-        
+
         for iouIdx in range(len(iou_thresholds)):
             iou_threshold = iou_thresholds[iouIdx]
 
             for iou_type, iou_func, crowd_func, score_func, indices in iou_types:
                 gt_used = [False] * len(gt_classes)
-                
+
                 ap_obj = ap_data[iou_type][iouIdx][_class]
                 ap_obj.add_gt_positives(num_gt_for_class)
 
                 for i in indices:
                     if classes[i] != _class:
                         continue
-                    
+
                     max_iou_found = iou_threshold
                     max_match_idx = -1
                     for j in range(num_gt):
                         if gt_used[j] or gt_classes[j] != _class:
                             continue
-                            
+
                         iou = iou_func(i, j)
 
                         if iou > max_iou_found:
                             max_iou_found = iou
                             max_match_idx = j
-                    
+
                     if max_match_idx >= 0:
                         gt_used[max_match_idx] = True
                         ap_obj.push(score_func(i), True)
@@ -499,7 +499,7 @@ def prep_metrics(ap_data, dets, img, gt, gt_masks, h, w, num_crowd, image_id, de
                             for j in range(len(crowd_classes)):
                                 if crowd_classes[j] != _class:
                                     continue
-                                
+
                                 iou = crowd_func(i, j)
 
                                 if iou > iou_threshold:
@@ -526,7 +526,7 @@ class APDataObject:
 
     def push(self, score:float, is_true:bool):
         self.data_points.append((score, is_true))
-    
+
     def add_gt_positives(self, num_positives:int):
         """ Call this once per image. """
         self.num_gt_positives += num_positives
@@ -553,7 +553,7 @@ class APDataObject:
             # datum[1] is whether the detection a true or false positive
             if datum[1]: num_true += 1
             else: num_false += 1
-            
+
             precision = num_true / (num_true + num_false)
             recall    = num_true / self.num_gt_positives
 
@@ -602,7 +602,7 @@ def evalimage(net:Yolact, path:str, save_path:str=None):
     preds = net(batch)
 
     img_numpy = prep_display(preds, frame, None, None, undo_transform=False)
-    
+
     if save_path is None:
         img_numpy = img_numpy[:, :, (2, 1, 0)]
 
@@ -618,7 +618,7 @@ def evalimages(net:Yolact, input_folder:str, output_folder:str):
         os.mkdir(output_folder)
 
     print()
-    for p in Path(input_folder).glob('*'): 
+    for p in Path(input_folder).glob('*'):
         path = str(p)
         name = os.path.basename(path)
         name = '.'.join(name.split('.')[:-1]) + '.png'
@@ -640,15 +640,15 @@ class CustomDataParallel(torch.nn.DataParallel):
 def evalvideo(net:Yolact, path:str, out_path:str=None):
     # If the path is a digit, parse it as a webcam index
     is_webcam = path.isdigit()
-    
+
     # If the input image size is constant, this make things faster (hence why we can use it in a video setting).
     cudnn.benchmark = True
-    
+
     if is_webcam:
         vid = cv2.VideoCapture(int(path))
     else:
         vid = cv2.VideoCapture(path)
-    
+
     if not vid.isOpened():
         print('Could not open video "%s"' % path)
         exit(-1)
@@ -656,7 +656,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
     target_fps   = round(vid.get(cv2.CAP_PROP_FPS))
     frame_width  = round(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = round(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
+
     if is_webcam:
         num_frames = float('inf')
     else:
@@ -718,7 +718,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
     frame_buffer = Queue()
     video_fps = 0
 
-    # All this timing code to make sure that 
+    # All this timing code to make sure that
     def play_video():
         try:
             nonlocal frame_buffer, running, video_fps, is_webcam, num_frames, frames_displayed, vid_done
@@ -755,7 +755,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
                         print('\rProcessing Frames  %s %6d / %6d (%5.2f%%)    %5.2f fps        '
                             % (repr(progress_bar), frames_displayed, num_frames, progress, fps), end='')
 
-                
+
                 # This is split because you don't want savevideo to require cv2 display functionality (see #197)
                 if out_path is None and cv2.waitKey(1) == 27:
                     # Press Escape to close
@@ -778,7 +778,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
 
                 next_frame_target = max(2 * new_target - video_frame_times.get_avg(), 0)
                 target_time = frame_time_start + next_frame_target - 0.001 # Let's just subtract a millisecond to be safe
-                
+
                 if out_path is None or args.emulate_playback:
                     # This gives more accurate timing than if sleeping the whole amount at once
                     while time.time() < target_time:
@@ -820,7 +820,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
                 next_frames = pool.apply_async(get_next_frame, args=(vid,))
             else:
                 next_frames = None
-            
+
             if not (vid_done and len(active_frames) == 0):
                 # For each frame in our active processing queue, dispatch a job
                 # for that frame using the current function in the sequence
@@ -829,7 +829,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
                     if frame['idx'] == 0:
                         _args.append(fps_str)
                     frame['value'] = pool.apply_async(sequence[frame['idx']], args=_args)
-                
+
                 # For each frame whose job was the last in the sequence (i.e. for all final outputs)
                 for frame in active_frames:
                     if frame['idx'] == 0:
@@ -847,7 +847,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
                         # Split this up into individual threads for prep_frame since it doesn't support batch size
                         active_frames += [{'value': extract_frame(frame['value'], i), 'idx': 0} for i in range(1, len(frame['value'][0]))]
                         frame['value'] = extract_frame(frame['value'], 0)
-                
+
                 # Finish loading in the next frames and add them to the processing queue
                 if next_frames is not None:
                     frames = next_frames.get()
@@ -861,14 +861,14 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
                 fps = args.video_multiframe / frame_times.get_avg()
             else:
                 fps = 0
-            
+
             fps_str = 'Processing FPS: %.2f | Video Playback FPS: %.2f | Frames in Buffer: %d' % (fps, video_fps, frame_buffer.qsize())
             if not args.display_fps:
                 print('\r' + fps_str + '    ', end='')
 
     except KeyboardInterrupt:
         print('\nStopping...')
-    
+
     cleanup_and_exit()
 
 def evaluate(net:Yolact, dataset, train_mode=False):
@@ -914,7 +914,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
         timer.disable('Load Data')
 
     dataset_indices = list(range(len(dataset)))
-    
+
     if args.shuffle:
         random.shuffle(dataset_indices)
     elif not args.no_sort:
@@ -962,12 +962,12 @@ def evaluate(net:Yolact, dataset, train_mode=False):
                 prep_benchmark(preds, h, w)
             else:
                 prep_metrics(ap_data, preds, img, gt, gt_masks, h, w, num_crowd, dataset.ids[image_idx], detections)
-            
+
             # First couple of images take longer because we're constructing the graph.
             # Since that's technically initialization, don't include those in the FPS calculations.
             if it > 1:
                 frame_times.add(timer.total_time())
-            
+
             if args.display:
                 if it > 1:
                     print('Avg FPS: %.4f' % (1 / frame_times.get_avg()))
@@ -1053,13 +1053,13 @@ def calc_map(ap_data):
         all_maps[iou_type]['all'] = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values())-1))
     print('#################### All Classes ####################')  # also added
     print_maps(all_maps)
-    
+
     # Put in a prettier format so we can serialize it to json during training
     all_maps = {k: {j: round(u, 2) for j, u in v.items()} for k, v in all_maps.items()}
     return all_maps
 
 def print_maps(all_maps):
-    # Warning: hacky 
+    # Warning: hacky
     make_row = lambda vals: (' %5s |' * len(vals)) % tuple(vals)
     make_sep = lambda n:  ('-------+' * n)
 
@@ -1122,7 +1122,7 @@ if __name__ == '__main__':
                                     transform=BaseTransform(), has_gt=cfg.dataset.has_gt)
             prep_coco_cats()
         else:
-            dataset = None        
+            dataset = None
 
         print('Loading model...', end='')
         net = Yolact()
@@ -1134,5 +1134,3 @@ if __name__ == '__main__':
             net = net.cuda()
 
         evaluate(net, dataset)
-
-
