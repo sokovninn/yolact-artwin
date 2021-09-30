@@ -86,7 +86,7 @@ class Config(object):
         """
 
         ret = Config(vars(self))
-        
+
         for key, val in new_config_dict.items():
             ret.__setattr__(key, val)
 
@@ -102,7 +102,7 @@ class Config(object):
 
         for key, val in new_config_dict.items():
             self.__setattr__(key, val)
-    
+
     def print(self):
         for k, v in vars(self).items():
             print(k, ' = ', v)
@@ -138,7 +138,7 @@ dataset_base = Config({
 
 coco2014_dataset = dataset_base.copy({
     'name': 'COCO 2014',
-    
+
     'train_info': './data/yolact/datasets/coco/annotations/instances_train2014.json',
     'valid_info': './data/yolact/datasets/coco/annotations/instances_val2014.json',
 
@@ -147,7 +147,7 @@ coco2014_dataset = dataset_base.copy({
 
 coco2017_dataset = dataset_base.copy({
     'name': 'COCO 2017',
-    
+
     'train_info': './data/yolact/datasets/coco/annotations/instances_train2017.json',
     'valid_info': './data/yolact/datasets/coco/annotations/instances_val2017.json',
 
@@ -178,6 +178,20 @@ coco_artwin_dataset = dataset_base.copy({
     'label_map': COCO_ARTWIN_LABEL_MAP
 })
 
+example_dataset = dataset_base.copy({
+    'name': 'Example Dataset',
+
+    'train_images': "data/datasets/output_dataset/images/train",
+    'train_info':   "data/datasets/output_dataset/annotations/train.json",
+
+    'valid_images': "data/datasets/output_dataset/images/test",
+    'valid_info':   "data/datasets/output_dataset/annotations/test.json",
+
+    'has_gt': True,
+
+    'class_names': ("bird", "dog", "plain", "train", "truck"),
+})
+
 PASCAL_CLASSES = ("aeroplane", "bicycle", "bird", "boat", "bottle",
                   "bus", "car", "cat", "chair", "cow", "diningtable",
                   "dog", "horse", "motorbike", "person", "pottedplant",
@@ -188,7 +202,7 @@ pascal_sbd_dataset = dataset_base.copy({
 
     'train_images': './data/sbd/img',
     'valid_images': './data/sbd/img',
-    
+
     'train_info': './data/sbd/pascal_sbd_train.json',
     'valid_info': './data/sbd/pascal_sbd_val.json',
 
@@ -690,7 +704,7 @@ coco_base_config = Config({
     'use_focal_loss': False,
     'focal_loss_alpha': 0.25,
     'focal_loss_gamma': 2,
-    
+
     # The initial bias toward forground objects, as specified in the focal loss paper
     'focal_loss_init_pi': 0.01,
 
@@ -752,7 +766,7 @@ coco_base_config = Config({
 
     # Input image size.
     'max_size': 300,
-    
+
     # Whether or not to do post processing on the cpu at test time
     'force_cpu_nms': True,
 
@@ -782,7 +796,7 @@ coco_base_config = Config({
 
     # Whether or not to use the predicted coordinate scheme from Yolo v2
     'use_yolo_regressors': False,
-    
+
     # For training, bboxes are considered "positive" if their anchors have a 0.5 IoU overlap
     # or greater with a ground truth box. If this is true, instead of using the anchor boxes
     # for this IoU computation, the matching function will use the predicted bbox coordinates.
@@ -804,7 +818,7 @@ coco_base_config = Config({
     # Do not crop out the mask with bbox but slide a convnet on the image-size mask,
     # then use global pooling to get the final mask score
     'use_maskiou': False,
-    
+
     # Archecture for the mask iou network. A (num_classes-1, 1, {}) layer is appended to the end.
     'maskiou_net': [],
 
@@ -830,12 +844,12 @@ yolact_base_config = coco_base_config.copy({
     'num_classes': len(coco2017_dataset.class_names) + 1, #kuka_env_pybullet_dataset // coco2017_dataset # The +1 stands for "background" class
 
     # Image Size
-    'max_size': 550, 
+    'max_size': 550,
 
     # Training params
     'lr_steps': (280000, 600000, 700000, 750000),
     'max_iter': 800000,
-    
+
     # Backbone Settings
     'backbone': resnet101_backbone.copy({
         'selected_layers': list(range(1, 4)),
@@ -896,7 +910,7 @@ yolact_darknet53_config = yolact_base_config.copy({
 
     'backbone': darknet53_backbone.copy({
         'selected_layers': list(range(2, 5)),
-        
+
         'pred_scales': yolact_base_config.backbone.pred_scales,
         'pred_aspect_ratios': yolact_base_config.backbone.pred_aspect_ratios,
         'use_pixel_scales': True,
@@ -910,7 +924,7 @@ yolact_resnet50_config = yolact_base_config.copy({
 
     'backbone': resnet50_backbone.copy({
         'selected_layers': list(range(1, 4)),
-        
+
         'pred_scales': yolact_base_config.backbone.pred_scales,
         'pred_aspect_ratios': yolact_base_config.backbone.pred_aspect_ratios,
         'use_pixel_scales': True,
@@ -922,14 +936,14 @@ yolact_resnet50_config = yolact_base_config.copy({
 
 yolact_resnet50_pascal_config = yolact_resnet50_config.copy({
     'name': None, # Will default to yolact_resnet50_pascal
-    
+
     # Dataset stuff
     'dataset': pascal_sbd_dataset,
     'num_classes': len(pascal_sbd_dataset.class_names) + 1,
 
     'max_iter': 120000,
     'lr_steps': (60000, 100000),
-    
+
     'backbone': yolact_resnet50_config.backbone.copy({
         'pred_scales': [[32], [64], [128], [256], [512]],
         'use_square_anchors': False,
@@ -943,7 +957,7 @@ yolact_plus_base_config = yolact_base_config.copy({
 
     'backbone': resnet101_dcn_inter3_backbone.copy({
         'selected_layers': list(range(1, 4)),
-        
+
         'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
         'pred_scales': [[i * 2 ** (j / 3.0) for j in range(3)] for i in [24, 48, 96, 192, 384]],
         'use_pixel_scales': True,
@@ -965,7 +979,7 @@ yolact_plus_resnet50_config = yolact_plus_base_config.copy({
 
     'backbone': resnet50_dcnv2_backbone.copy({
         'selected_layers': list(range(1, 4)),
-        
+
         'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
         'pred_scales': [[i * 2 ** (j / 3.0) for j in range(3)] for i in [24, 48, 96, 192, 384]],
         'use_pixel_scales': True,
@@ -990,7 +1004,7 @@ crow_base_config = yolact_base_config.copy({ #see yolact_base_config for all the
 
   # Image Size
   'max_size': max_size, #crow
-  
+
   # Training params
   'max_iter': max_iter,
   'lr_steps': lr_steps,
@@ -1004,7 +1018,7 @@ crow_base_config = yolact_base_config.copy({ #see yolact_base_config for all the
 
     'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
     'pred_scales': PRED_SCALES, #crow
-  }),  
+  }),
 
 })
 
@@ -1034,6 +1048,16 @@ coco_artwin_base_config = yolact_base_config.copy({ #see yolact_base_config for 
 
 })
 
+example_base_config = coco_artwin_base_config.copy({
+    'name': 'example_base',
+    # Dataset stuff
+    'dataset': example_dataset, #kuka_env_pybullet_dataset
+    'num_classes': len(example_dataset.class_names) + 1, #The +1 stands for "background" class
+
+    'max_iter': 100,
+
+})
+
 # Default config
 cfg = yolact_base_config.copy()
 ### CROW override
@@ -1045,7 +1069,7 @@ def set_cfg(config_name:str):
 
     # Note this is not just an eval because I'm lazy, but also because it can
     # be used like ssd300_config.copy({'max_size': 400}) for extreme fine-tuning
-    if type(config_name) == str: 
+    if type(config_name) == str:
         cfg.replace(eval(config_name))
     else:
         cfg.replace(config_name)
